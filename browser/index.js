@@ -35,6 +35,114 @@ module.exports = {
      *
      */
     init: function () {
+        const switchBaseLayer = (z, init = false) => {
+            if (z > SWITCH_LEVEL && (currentZoom <= SWITCH_LEVEL || init)) {
+                // setBaseLayer.init('geodanmark_2020_12_5cm');
+            }
+
+            if (z <= SWITCH_LEVEL && (currentZoom > SWITCH_LEVEL || init)) {
+                // setBaseLayer.init('osm');
+            }
+        }
+
+        const switchSymbolsCover = (z) => {
+            let opacity = '100%';
+            let pointerEvents = 'none';
+            let display = 'inline';
+            if (z > SWITCH_LEVEL) {
+                opacity = '100%'
+                pointerEvents = 'auto';
+                display = 'none';
+            } else {
+                opacity = '10%'
+                pointerEvents = 'none';
+                display = 'inline';
+            }
+            const poll = () => {
+                const e = $('.symbols-cover');
+                const t = $('.symbols-cover-text');
+
+                if (e.length > 0 && t.length > 0) {
+                    e.css('opacity', opacity);
+                    e.css('pointer-events', pointerEvents);
+                    t.css('display', display);
+                } else {
+                    setTimeout(() => {
+                        poll();
+                    }, 50)
+                }
+            }
+            poll();
+        }
+
+        $('#vidi-symbols-store').on('click', () => {
+            symbols.store('f').then((e) => {
+                    symbols.lock();
+                    $('#vidi-symbols-store').attr('disabled', true);
+                    $('#aau-reset').attr('disabled', true);
+                    $('#aau-help').attr('disabled', true);
+                    window.parent.postMessage({type: "doneCallback", symbolState: symbols.getState().symbolState}, "*");
+                },
+                (e) => {
+                    console.log("Error", e);
+                    alert("Noget gik galt - prøv igen");
+                }
+            )
+        });
+        $('#confirm1').click((e) => {
+            const c = countSymbols();
+            if (c < 2) {
+                alert(`Du skal placere en pil`);
+                return;
+            }
+            if (c > 2) {
+                alert(`Du må kun placere en pil. Slet venligst en eller flere`);
+                return;
+            }
+
+            if (config?.extensionConfig?.symbols?.files?.length === 2) {
+                $('#confirm1').hide();
+                $('#confirm2').show();
+            } else {
+                $('#confirm1').hide();
+                $('#confirm2').show();
+                const someTabTriggerEl = document.querySelector('#symbol-tab-2');
+                const tab = new bootstrap.Tab(someTabTriggerEl);
+                tab.show();
+            }
+            $('.symbols-delete').hide();
+            $('#aau-step-modal').find('button').html('Næste');
+            symbols.store('i2');
+        })
+
+
+        $('#confirm2').click(() => {
+            const c = countSymbols();
+            if (c < 1) {
+                alert(`Du skal placere en pil`);
+                return;
+            }
+            // if (c > 4) {
+            //     alert(`Du må kun placere max to pile. Slet venligst en eller flere`);
+            //     return;
+            // }
+            $('#confirm2').show();
+            $('.symbols-delete').hide();
+        })
+        $('#aau-help').click(() => {
+            modalElHelp.show()
+        })
+        $('#aau-reset').click(() => {
+            if (confirm("Er du sikker på, at du vil starte forfra med registrering i kortet?")) {
+                location.hash = '';
+                location.reload();
+            }
+        })
+
+        const countSymbols = () => {
+            const state = symbols.getState();
+            return Object.keys(state.symbolState).length;
+        }
 
         modalHelp = document.getElementById('aau-help-modal');
         modalElHelp = new bootstrap.Modal(modalHelp);
@@ -123,114 +231,10 @@ module.exports = {
         currentZoom = z;
         // switchBaseLayer(z, true);
         switchSymbolsCover(z);
+
+
+
+
     }
 
 };
-const switchBaseLayer = (z, init = false) => {
-    if (z > SWITCH_LEVEL && (currentZoom <= SWITCH_LEVEL || init)) {
-        // setBaseLayer.init('geodanmark_2020_12_5cm');
-    }
-
-    if (z <= SWITCH_LEVEL && (currentZoom > SWITCH_LEVEL || init)) {
-        // setBaseLayer.init('osm');
-    }
-}
-
-const switchSymbolsCover = (z) => {
-    let opacity = '100%';
-    let pointerEvents = 'none';
-    let display = 'inline';
-    if (z > SWITCH_LEVEL) {
-        opacity = '100%'
-        pointerEvents = 'auto';
-        display = 'none';
-    } else {
-        opacity = '10%'
-        pointerEvents = 'none';
-        display = 'inline';
-    }
-    const poll = () => {
-        const e = $('.symbols-cover');
-        const t = $('.symbols-cover-text');
-
-        if (e.length > 0 && t.length > 0) {
-            e.css('opacity', opacity);
-            e.css('pointer-events', pointerEvents);
-            t.css('display', display);
-        } else {
-            setTimeout(() => {
-                poll();
-            }, 50)
-        }
-    }
-    poll();
-}
-
-$('#vidi-symbols-store').on('click', () => {
-    symbols.store('f').then((e) => {
-            symbols.lock();
-            $('#vidi-symbols-store').attr('disabled', true);
-            $('#aau-reset').attr('disabled', true);
-            $('#aau-help').attr('disabled', true);
-            window.parent.postMessage({type: "doneCallback", symbolState: symbols.getState().symbolState}, "*");
-        },
-        (e) => {
-            console.log("Error", e);
-            alert("Noget gik galt - prøv igen");
-        }
-    )
-});
-$('#confirm1').click((e) => {
-    const c = countSymbols();
-    if (c < 2) {
-        alert(`Du skal placere en pil`);
-        return;
-    }
-    if (c > 2) {
-        alert(`Du må kun placere en pil. Slet venligst en eller flere`);
-        return;
-    }
-
-    if (config?.extensionConfig?.symbols?.files?.length === 2) {
-        $('#confirm1').hide();
-        $('#confirm2').show();
-    } else {
-        $('#confirm1').hide();
-        $('#confirm2').show();
-        const someTabTriggerEl = document.querySelector('#symbol-tab-2');
-        const tab = new bootstrap.Tab(someTabTriggerEl);
-        tab.show();
-    }
-    $('.symbols-delete').hide();
-    $('#aau-step-modal').find('button').html('Næste');
-    symbols.store('i2');
-})
-
-
-$('#confirm2').click(() => {
-    const c = countSymbols();
-    if (c < 1) {
-        alert(`Du skal placere en pil`);
-        return;
-    }
-    // if (c > 4) {
-    //     alert(`Du må kun placere max to pile. Slet venligst en eller flere`);
-    //     return;
-    // }
-    $('#confirm2').show();
-    $('.symbols-delete').hide();
-})
-$('#aau-help').click(() => {
-    modalElHelp.show()
-})
-$('#aau-reset').click(() => {
-    if (confirm("Er du sikker på, at du vil starte forfra med registrering i kortet?")) {
-        location.hash = '';
-        location.reload();
-    }
-})
-
-const countSymbols = () => {
-    const state = symbols.getState();
-    return Object.keys(state.symbolState).length;
-}
