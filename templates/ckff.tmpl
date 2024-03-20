@@ -1,4 +1,7 @@
 <style>
+    .offcanvas {
+        --bs-offcanvas-height: none;
+    }
     .navbar .navbar-brand {
         height: 48px;
         line-height: 19px;
@@ -11,7 +14,8 @@
     }
     .offcanvas-bottom {
         height: fit-content;
-        min-height: 190px;
+        /*max-height: 230px !important;*/
+        overflow: auto;
     }
     @media (max-width: 1000px) {
         .symbol-text-wrapper {
