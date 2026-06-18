@@ -187,7 +187,7 @@ module.exports = {
                     return;
                 }
                 if (currentZoom <= SWITCH_LEVEL) {
-                    alert('Du skal zoome tættere på, inden du kan markere, hvor det skete. Zoom ind, indtil kortet skifter til et luftfoto.');
+                    alert('Zoom ind til stedet, du gerne vil markere. Du skal zoome tæt på for at sætte en prik. Du kan skifte til luftfoto i højre hjørne, hvis det giver dig bedre overblik.');
                     return;
                 }
                 clicktimer = setTimeout(function () {
